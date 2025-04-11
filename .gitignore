@@ -1,4 +1,10 @@
+# python artifacts
+*.py[cod]
+__pycache__/
+*.egg-info
 
 # pixi environments
 .pixi
-*.egg-info
+
+# tool caches
+/.prettier_cache/
