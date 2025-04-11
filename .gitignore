@@ -8,3 +8,7 @@ __pycache__/
 
 # tool caches
 /.prettier_cache/
+
+# jupyter
+.ipynb_checkpoints/
+.virtual_documents/
