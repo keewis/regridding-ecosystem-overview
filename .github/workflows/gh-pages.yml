@@ -1,0 +1,118 @@
+name: Deploy to Github Pages
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JupyterBook cache
+        uses: actions/cache@v4
+        with:
+          path: docs/_build
+          key: jupyterbook
+
+      - name: Setup environment
+        uses: prefix-dev/setup-pixi@v0.8.8
+        with:
+          cache: true
+          activate-environment: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+
+      - name: Build JupyterBook
+        if: github.event.action != 'closed'
+        run: |
+          jupyter-book build docs --warningiserror --keep-going --builder html
+
+      - name: Dump Build Logs
+        if: always()
+        run: |
+          if [[ -d docs/_build/html/reports ]]; then
+            find docs/_build/html/reports \
+                -name "*.log" \
+                -exec sh -c 'echo "logs from: $(basename {})\n———————————————————"; cat "{}"' \;
+          fi
+
+      - name: Upload Built Page
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: docs/_build/html
+
+      - name: Upload Pages Artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build/html
+          name: build
+
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Pages Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: docs/_build/html/
+
+      - name: check directory
+        run: |
+          find . -type d
+
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: docs/_build/html/
+
+  deploy:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy to Github Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
