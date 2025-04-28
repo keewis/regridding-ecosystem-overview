@@ -4,8 +4,15 @@
 format: jb-book
 root: intro
 chapters:
+  - file: grid-types/index
+    sections:
+      - file: grid-types/rectilinear
+      - file: grid-types/curvilinear
+      - file: grid-types/dggs
+      - file: grid-types/unstructured
   - file: regridding/index
-  - file: regridding/xesmf-h3
-  - file: regridding/xesmf-healpix
-  - file: regridding/uxarray-healpix
-  - file: regridding/grid-weights-healpix
+    sections:
+      - file: regridding/xesmf-h3
+      - file: regridding/xesmf-healpix
+      - file: regridding/uxarray-healpix
+      - file: regridding/grid-weights-healpix
