@@ -10,6 +10,7 @@ chapters:
       - file: grid-types/curvilinear
       - file: grid-types/dggs
       - file: grid-types/unstructured
+  - file: algorithms/index
   - file: regridding/index
     sections:
       - file: regridding/xesmf-h3
